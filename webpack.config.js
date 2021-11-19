@@ -4,54 +4,67 @@
 
 // resolve用來拼接絕對路徑的方法
 const { resolve } = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  // webpack配置
-  // 入口起點
-  entry: './src/index.js',
-  // 輸出
+  entry: './src/js/index.js',
   output: {
-    // 輸出文件名
-    filename: 'built.js',
-    // 輪出路徑
-    // __dirname nodejs的變量，代表當前文件的目錄絕對路徑
+    filename: 'js/built.js',
     path: resolve(__dirname, 'build')
   },
-  // loader的配置
   module: {
     rules: [
-      // 詳細loader配置
-      // 不同文件必須配置不同loader處理
+      // loader的配置
       {
-        // 匹配那些文件
-        test: /\.css$/,
-        // 使用那些loader進行處理
-        use: [
-          // use數組中loader執行順序：從右到左，從下到上，依次執行
-          // 建立style標籤，將JS中的樣式資源插入進行，加入到head中生效
-          'style-loader',
-          // 將css文件變成commonjs模組加載js中，裡面內容是樣式字符串
-          'css-loader'
-        ]
+        // 處理less資源
+        test: /\.less$/,
+        use: [ 'style-loader', 'css-loader', 'less-loader' ]
       },
       {
-        test: /\.less$/,
-        use: [
-          'style-loader', 
-          'css-loader',
-          // 將less文件編譯成css文件
-          // 需要下載less-loader和less
-          'less-loader'
-        ]
+        // 處理css資源
+        test: /\.css$/,
+        use: [ 'style-loader', 'css-loader' ]
+      },
+      {
+        // 處理圖片資源
+        test: /\.(jpg|png|gif)$/,
+        loader: 'url-loader',
+        options: {
+          limit: 8 * 1024,
+          name: '[hash:10].[ext]',
+          // 關閉es6模塊
+          esModule: false
+        }
+      },
+      {
+        // 處理HTML中的img資源
+        test: /\.html$/,
+        loader: 'html-loader'
+      },
+      {
+        // 處理其資源
+        exclude: /\.(html|js|css|less|jpg|png|gif)/,
+        loader: 'file-loader',
+        options:{
+          name: '[hash:10].[ext]'
+        }
       }
     ]
   },
-  // plugins的配置
   plugins: [
-    // 詳細plugins的配置
+    // plugins的配置
+    new HtmlWebpackPlugin({
+      template: './src/index.html'
+    })
   ],
-  // 模式
+  stats: { children: false },
   mode: 'development',
   // mode: 'production'
+  devServer: {
+    contentBase: resolve(__dirname, 'build'),
+    compress: true,
+    port: 3000,
+    open: true
+  }
 
 }
